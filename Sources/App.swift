@@ -8,6 +8,19 @@ final class UsageStore: ObservableObject {
 
     private var timer: Timer?
 
+    /// システム設定のログイン項目に入っているか。
+    @Published var launchesAtLogin: Bool = LoginItem.isEnabled {
+        didSet {
+            guard launchesAtLogin != LoginItem.isEnabled else { return }
+            do {
+                try LoginItem.setEnabled(launchesAtLogin)
+            } catch {
+                errorMessage = "ログイン項目の変更に失敗: \(error.localizedDescription)"
+                launchesAtLogin = LoginItem.isEnabled
+            }
+        }
+    }
+
     /// 5 時間枠が動くので 60 秒ごと。メニューを開いた時も引く。
     private let interval: TimeInterval = 60
 
@@ -130,6 +143,13 @@ struct UsagePanel: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            Toggle("ログイン時に起動", isOn: Binding(
+                get: { store.launchesAtLogin },
+                set: { store.launchesAtLogin = $0 }
+            ))
+            .toggleStyle(.checkbox)
+            .font(.caption)
+
             HStack {
                 Button("更新") {
                     Task { await store.refresh() }
@@ -192,6 +212,18 @@ struct ClaudeUsageBarApp: App {
     init() {
         // `ClaudeUsageBar --diagnose` で、取得経路の結果だけを標準出力に吐いて終わる。
         // アプリ本体と同じ署名で動くので、Keychain の許可を余分に訊かれない。
+        if CommandLine.arguments.contains("--enable-login-item") ||
+           CommandLine.arguments.contains("--disable-login-item") {
+            let enable = CommandLine.arguments.contains("--enable-login-item")
+            do {
+                try LoginItem.setEnabled(enable)
+                print("ログイン項目: \(LoginItem.isEnabled ? "登録済み" : "未登録")")
+            } catch {
+                print("ログイン項目の変更に失敗: \(error.localizedDescription)")
+            }
+            exit(0)
+        }
+
         guard CommandLine.arguments.contains("--diagnose") else { return }
         let semaphore = DispatchSemaphore(value: 0)
         // init は MainActor なので、ここで Task を作ると semaphore.wait() と睨み合って止まる。

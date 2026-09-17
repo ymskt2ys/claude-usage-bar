@@ -23,7 +23,18 @@ open build/ClaudeUsageBar.app
 Xcode プロジェクトは不要。`swiftc` で 2 ファイルを直接コンパイルして `.app` を組み立てる。
 `LSUIElement` を立てているので Dock にアイコンは出ない。
 
-ログイン時に自動起動したい場合は、システム設定 → 一般 → ログイン項目 に `build/ClaudeUsageBar.app` を追加する。
+## ログイン時の自動起動
+
+パネルの「ログイン時に起動」チェックボックスで切り替える (`SMAppService` でシステム設定の
+ログイン項目に登録する)。コマンドラインからも操作できる。
+
+```bash
+./build/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --enable-login-item
+./build/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --disable-login-item
+```
+
+登録は `.app` のパスに紐づく。`build.sh` は毎回 `build/` を作り直すので同じパスに戻るが、
+アプリを別の場所へ移した場合は登録し直す。
 
 ## データの取り方
 

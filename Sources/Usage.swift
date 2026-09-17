@@ -401,3 +401,23 @@ struct KeychainCredentials {
         guard status == errSecSuccess else { throw UsageError.refreshFailed(Int(status)) }
     }
 }
+
+// MARK: - ログイン項目
+
+import ServiceManagement
+
+/// システム設定 → 一般 → ログイン項目 への登録。
+/// アプリを移動すると登録が切れるので、その時は登録し直す。
+enum LoginItem {
+    static var isEnabled: Bool {
+        SMAppService.mainApp.status == .enabled
+    }
+
+    static func setEnabled(_ enabled: Bool) throws {
+        if enabled {
+            try SMAppService.mainApp.register()
+        } else {
+            try SMAppService.mainApp.unregister()
+        }
+    }
+}
