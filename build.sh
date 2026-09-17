@@ -9,15 +9,25 @@ BUNDLE_ID="jp.subtonic.claudeusagebar"
 APP="build/${APP_NAME}.app"
 
 rm -rf build
-mkdir -p "${APP}/Contents/MacOS"
+mkdir -p "${APP}/Contents/MacOS" build/obj
 
-swiftc \
-  -O \
-  -parse-as-library \
-  -target arm64-apple-macos13.0 \
-  -framework AppKit \
-  -o "${APP}/Contents/MacOS/${APP_NAME}" \
-  Sources/Usage.swift Sources/App.swift
+# Apple Silicon と Intel の両方で動くよう、アーキごとにビルドして lipo で束ねる。
+# swiftc は 1 回の呼び出しで複数 target を扱えない。
+for ARCH in arm64 x86_64; do
+  swiftc \
+    -O \
+    -parse-as-library \
+    -target "${ARCH}-apple-macos13.0" \
+    -framework AppKit \
+    -o "build/obj/${APP_NAME}-${ARCH}" \
+    Sources/Usage.swift Sources/App.swift
+done
+
+lipo -create \
+  "build/obj/${APP_NAME}-arm64" \
+  "build/obj/${APP_NAME}-x86_64" \
+  -output "${APP}/Contents/MacOS/${APP_NAME}"
+rm -rf build/obj
 
 cat > "${APP}/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -42,3 +52,4 @@ PLIST
 codesign --force --sign - --identifier "${BUNDLE_ID}" "${APP}"
 
 echo "built: ${APP}"
+lipo -archs "${APP}/Contents/MacOS/${APP_NAME}"

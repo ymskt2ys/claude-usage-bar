@@ -56,6 +56,17 @@ final class UsageStore: ObservableObject {
             .joined(separator: " · ")
     }
 
+    /// 1 つも数字が出せない時に、何が足りないかを伝える。
+    var emptyStateMessage: String {
+        if let errorMessage { return errorMessage }
+        return """
+        使用状況データが見つからない。
+
+        ・Claude デスクトップアプリを一度起動する         (5時間枠と週の値をローカルに記録する)
+        ・または、ターミナルで claude にログインする         (API から全部の枠を取得できるようになる)
+        """
+    }
+
     /// どれか 1 つでも逼迫していたら色を変える。
     var severityColor: Color {
         let peak = snapshot?.limits.compactMap(\.displayPercent).max() ?? 0
@@ -113,7 +124,8 @@ struct UsagePanel: View {
                     }
                 }
             } else {
-                Text(store.errorMessage ?? "読み込み中…")
+                Text(store.snapshot == nil && store.errorMessage == nil
+                     ? "読み込み中…" : store.emptyStateMessage)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
