@@ -17,8 +17,11 @@ Claude のプラン使用率を macOS のメニューバーに常駐表示する
 
 ```bash
 ./build.sh
-open build/ClaudeUsageBar.app
+cp -R build/ClaudeUsageBar.app /Applications/
+open /Applications/ClaudeUsageBar.app
 ```
+
+`build.sh` は毎回 `build/` を作り直すので、常駐させる実体は `/Applications` に置く。
 
 Xcode プロジェクトは不要。`swiftc` で 2 ファイルを直接コンパイルして `.app` を組み立てる。
 `LSUIElement` を立てているので Dock にアイコンは出ない。
@@ -29,12 +32,12 @@ Xcode プロジェクトは不要。`swiftc` で 2 ファイルを直接コン�
 ログイン項目に登録する)。コマンドラインからも操作できる。
 
 ```bash
-./build/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --enable-login-item
-./build/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --disable-login-item
+/Applications/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --enable-login-item
+/Applications/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --disable-login-item
 ```
 
-登録は `.app` のパスに紐づく。`build.sh` は毎回 `build/` を作り直すので同じパスに戻るが、
-アプリを別の場所へ移した場合は登録し直す。
+登録は `.app` のパスに紐づく。アプリを移動したら、移動前のパスで `--disable-login-item`、
+移動後のパスで `--enable-login-item` を実行して登録し直す。
 
 ## データの取り方
 
@@ -66,7 +69,7 @@ Keychain の `Claude Code-credentials` から `claudeAiOauth.accessToken` を読
 ### 診断
 
 ```bash
-./build/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --diagnose
+/Applications/ClaudeUsageBar.app/Contents/MacOS/ClaudeUsageBar --diagnose
 ```
 
 どの枠がどのソースから来たか、API が失敗していればその理由を標準出力に出して終了する。
